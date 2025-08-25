@@ -19,7 +19,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-pool-sync = "3.0.0"
+pool-sync-mantle = "1.0.0"
 ```
 
 Configure your `.env` with both a full node and an archive node. The archive endpoint must be an archive node, while the full node can be either type. This dual-node design optimizes costs - use a paid archive endpoint for the initial intensive sync, then let the full node handle ongoing synchronization. After initial sync, all data is cached locally, dramatically reducing endpoint strain.
@@ -40,7 +40,7 @@ ARCHIVE = "archive node endpoint"
 
 ### Basic Pool Synchronization
 ```rust
-use pool_sync::{PoolSync, PoolType, Chain, PoolInfo};
+use pool_sync_mantle::{PoolSync, PoolType, Chain, PoolInfo};
 use anyhow::Result;
 
 #[tokio::main]
@@ -76,7 +76,7 @@ async fn main() -> Result<()> {
 
 ### Sync Specific Block Range
 ```rust
-use pool_sync::{PoolSync, PoolType, Chain};
+use pool_sync_mantle::{PoolSync, PoolType, Chain};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -127,7 +127,7 @@ Each protocol implements the `PoolFetcher` trait, providing:
 
 ### Performance Optimization
 ```rust
-use pool_sync::{PoolSync, PoolType, Chain};
+use pool_sync_mantle::{PoolSync, PoolType, Chain};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -152,7 +152,7 @@ async fn main() -> Result<()> {
 
 ### Working with Different Pool Types
 ```rust
-use pool_sync::{Pool, PoolType};
+use pool_sync_mantle::{Pool, PoolType};
 
 fn analyze_pool(pool: &Pool) {
     match pool {

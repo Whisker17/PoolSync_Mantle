@@ -1,5 +1,5 @@
 [package]
-name = "pool-sync"
+name = "pool-sync-mantle"
 version = "1.0.0"
 edition = "2021"
 authors = ["Whisker17"]
