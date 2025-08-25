@@ -1,12 +1,15 @@
 [package]
 name = "pool-sync"
 version = "1.0.0"
-edition = "2025"
+edition = "2021"
 authors = ["Whisker17"]
-description = "A library for synchronizing and managing various types of liquidity pools across different blockchains"
+description = "A comprehensive library for synchronizing DeFi pools (UniswapV3, Agni, MerchantMoe) on Mantle blockchain with intelligent caching and rate limiting"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/Whisker17/PoolSync_Mantle"
+homepage = "https://github.com/Whisker17/PoolSync_Mantle"
 readme = "README.md"
+keywords = ["defi", "amm", "pool", "mantle", "uniswap", "sync"]
+categories = ["api-bindings", "cryptography::cryptocurrencies"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
