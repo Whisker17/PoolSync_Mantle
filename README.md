@@ -20,6 +20,10 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 pool-sync-mantle = "1.0.0"
+anyhow = "1.0.82"
+tokio = {version = "1.37.0", features = ["rt-multi-thread", "macros"]}
+dotenv = "0.15.0"
+env_logger = "0.11.4"
 ```
 
 Configure your `.env` with both a full node and an archive node. The archive endpoint must be an archive node, while the full node can be either type. This dual-node design optimizes costs - use a paid archive endpoint for the initial intensive sync, then let the full node handle ongoing synchronization. After initial sync, all data is cached locally, dramatically reducing endpoint strain.
@@ -40,55 +44,79 @@ ARCHIVE = "archive node endpoint"
 
 ### Basic Pool Synchronization
 ```rust
-use pool_sync_mantle::{PoolSync, PoolType, Chain, PoolInfo};
 use anyhow::Result;
+use pool_sync_mantle::{Chain, PoolSync, PoolType, PoolInfo};
+use env_logger;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Configure and build the PoolSync instance for Mantle
+    env_logger::init();
+    
+    // Example: Sync multiple protocol pools on Mantle
+    let start_block = 80000400; // Starting block for Mantle
+    let end_block = 80803400;   // Ending block (testing small range)
+    
+    println!("Syncing DeFi pools on Mantle from block {} to {}...", start_block, end_block);
+    
+    // Configure and build the PoolSync instance
     let pool_sync = PoolSync::builder()
         .add_pool(PoolType::UniswapV3)     // Add Uniswap V3 pools
         .add_pool(PoolType::Agni)          // Add Agni pools  
         .add_pool(PoolType::MerchantMoe)   // Add MerchantMoe V2 pools
         .chain(Chain::Mantle)              // Target Mantle network
         .rate_limit(1000)                  // Set rate limit (ms between requests)
+        .block_range(start_block, end_block) // Set block range
         .build()?;
 
     // Synchronize pools
     let (pools, last_synced_block) = pool_sync.sync_pools().await?;
+    println!(
+        "Sync completed! Synced {} pools, last synced block: {}",
+        pools.len(),
+        last_synced_block
+    );
 
-    // Display pool information
-    for pool in &pools {
+    // Display information about some pools
+    println!("\nFirst 5 pools information:");
+    for (i, pool) in pools.iter().take(5).enumerate() {
         println!(
-            "Pool: {} | Type: {:?} | Token0: {} | Token1: {} | Fee: {}",
-            pool.address(),
-            pool.pool_type(),
-            pool.token0_name(),
-            pool.token1_name(),
-            pool.fee()
+            "  {}. Address: {:?}, Token0: {}, Token1: {}", 
+            i + 1,
+            pool.address(), 
+            pool.token0_name(), 
+            pool.token1_name()
         );
     }
 
-    println!("Successfully synced {} pools up to block {}!", pools.len(), last_synced_block);
     Ok(())
 }
 ```
 
-### Sync Specific Block Range
+### Quick Start Example
 ```rust
-use pool_sync_mantle::{PoolSync, PoolType, Chain};
+use anyhow::Result;
+use pool_sync_mantle::{PoolSync, PoolType, Chain, PoolInfo};
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Quick sync without specifying block range (uses cache)
     let pool_sync = PoolSync::builder()
-        .add_pool(PoolType::Agni)
+        .add_pool(PoolType::UniswapV3)
         .chain(Chain::Mantle)
         .rate_limit(500)
-        .block_range(80000000, 80010000)  // Sync specific range
         .build()?;
 
-    let (pools, _) = pool_sync.sync_pools().await?;
-    println!("Synced {} Agni pools in specified range", pools.len());
+    let (pools, last_synced_block) = pool_sync.sync_pools().await?;
+    
+    println!("Found {} UniswapV3 pools on Mantle", pools.len());
+    println!("Last synced block: {}", last_synced_block);
+    
+    // Filter high-fee pools
+    let high_fee_pools: Vec<_> = pools.iter()
+        .filter(|p| p.fee() >= 3000)  // 0.3% fee or higher
+        .collect();
+    
+    println!("High-fee pools: {}", high_fee_pools.len());
     Ok(())
 }
 ```
@@ -127,25 +155,36 @@ Each protocol implements the `PoolFetcher` trait, providing:
 
 ### Performance Optimization
 ```rust
-use pool_sync_mantle::{PoolSync, PoolType, Chain};
+use anyhow::Result;
+use pool_sync_mantle::{PoolSync, PoolType, Chain, PoolInfo};
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Optimized configuration for large-scale syncing
     let pool_sync = PoolSync::builder()
         .add_pool(PoolType::UniswapV3)
+        .add_pool(PoolType::Agni)
         .chain(Chain::Mantle)
-        .rate_limit(500)                    // Adjust based on endpoint limits
-        .block_range(None, Some(80000000))  // Sync up to specific block
+        .rate_limit(250)                    // Faster rate for paid endpoints
+        .block_range(80000000, 80100000)    // Sync specific large range
         .build()?;
 
+    println!("Starting optimized sync...");
     let (pools, last_block) = pool_sync.sync_pools().await?;
     
-    // Filter by specific criteria
-    let high_fee_pools: Vec<_> = pools.iter()
-        .filter(|p| p.fee() >= 3000)  // 0.3% fee or higher
+    // Analyze pool distribution by protocol
+    let uniswap_pools = pools.iter().filter(|p| matches!(p.pool_type(), PoolType::UniswapV3)).count();
+    let agni_pools = pools.iter().filter(|p| matches!(p.pool_type(), PoolType::Agni)).count();
+    
+    println!("Sync completed up to block {}", last_block);
+    println!("UniswapV3 pools: {}, Agni pools: {}", uniswap_pools, agni_pools);
+    
+    // Find pools with specific token pairs
+    let usdc_pools: Vec<_> = pools.iter()
+        .filter(|p| p.token0_name().contains("USDC") || p.token1_name().contains("USDC"))
         .collect();
         
-    println!("Found {} high-fee pools", high_fee_pools.len());
+    println!("Found {} pools with USDC", usdc_pools.len());
     Ok(())
 }
 ```
