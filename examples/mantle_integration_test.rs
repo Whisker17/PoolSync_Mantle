@@ -4,7 +4,7 @@
 //! It follows the same pattern as your provided example but targets Mantle.
 
 use anyhow::Result;
-use pool_sync::{Chain, PoolInfo, PoolSync, PoolType};
+use pool_sync_mantle::{Chain, PoolInfo, PoolSync, PoolType};
 
 #[tokio::main]
 async fn main() -> Result<()> {

@@ -1,7 +1,7 @@
 //! PoolSync: A library for synchronizing and managing liquidity pools on Mantle network
 //!
 //! This library provides functionality to interact with and synchronize data from
-//! Uniswap V3 pools on the Mantle blockchain network.
+//! multiple DeFi protocols (UniswapV3, Agni, MerchantMoe) on the Mantle blockchain network.
 
 // Public re-exports
 pub use chain::Chain;
