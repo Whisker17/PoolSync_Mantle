@@ -1,6 +1,6 @@
 [package]
 name = "pool-sync-mantle"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 authors = ["Whisker17"]
 description = "A comprehensive library for synchronizing DeFi pools (UniswapV3, Agni, MerchantMoe) on Mantle blockchain with intelligent caching and rate limiting"
